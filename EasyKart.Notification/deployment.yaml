@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: easy-kart-notification
+  namespace: easy-kart
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: easy-kart-notification #This should be same label
+  template:
+    metadata:
+      labels:
+        app: easy-kart-notification #This should be same label
+    spec:
+      containers:
+      - name: easy-kart-notification
+        image: pdesaidocker/easy-kart-api-notification:{{imageTag}}
+        ports:
+        - containerPort: 8080 #port defined in image dockerfile
+        env:
+        - name: ConnectionStrings__azservicebusconnstr
+          valueFrom:
+            configMapKeyRef:
+              name: easy-kart-cart-config-map
+              key: azservicebusconnstr
