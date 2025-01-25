@@ -31,3 +31,41 @@ spec:
             secretKeyRef:
               name: easy-kart-secret  
               key: azservicebusconnstr
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: easy-kart-notification-service
+  namespace: easy-kart
+spec:
+  selector:
+    app: easy-kart-notification #This should be same label
+  ports:
+    - protocol: TCP
+      port: 80 #Other pods in the cluster can connect to this service on port 80
+      targetPort: 8080 #port defined in image dockerfile
+  type: ClusterIP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: easy-kart-notification-ingress
+  namespace: easy-kart
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /notificationhub/$2
+    nginx.ingress.kubernetes.io/use-regex: 'true'
+    ingress.class: "nginx"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: easy-kart.centralindia.cloudapp.azure.com
+      http:
+        paths:
+          - path: /notificationhub(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: easy-kart-notification-service
+                port:
+                  number: 80
+---
